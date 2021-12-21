@@ -99,8 +99,6 @@ func (c *Context) Plan(config *configs.Config, prevRunState *states.State, opts 
 		return nil, diags
 	}
 
-	variables := mergeDefaultInputVariableValues(opts.SetVariables, config.Module.Variables)
-
 	// By the time we get here, we should have values defined for all of
 	// the root module variables, even if some of them are "unknown". It's the
 	// caller's responsibility to have already handled the decoding of these
@@ -108,7 +106,7 @@ func (c *Context) Plan(config *configs.Config, prevRunState *states.State, opts 
 	// user-friendly error messages if they are not all present, and so
 	// the error message from checkInputVariables should never be seen and
 	// includes language asking the user to report a bug.
-	varDiags := checkInputVariables(config.Module.Variables, variables)
+	varDiags := checkInputVariables(config.Module.Variables, opts.SetVariables)
 	diags = diags.Append(varDiags)
 
 	if len(opts.Targets) > 0 {
@@ -139,8 +137,8 @@ The -target option is not for routine use, and is provided only for exceptional 
 	}
 
 	// convert the variables into the format expected for the plan
-	varVals := make(map[string]plans.DynamicValue, len(variables))
-	for k, iv := range variables {
+	varVals := make(map[string]plans.DynamicValue, len(opts.SetVariables))
+	for k, iv := range opts.SetVariables {
 		// We use cty.DynamicPseudoType here so that we'll save both the
 		// value _and_ its dynamic type in the plan, so we can recover
 		// exactly the same value later.

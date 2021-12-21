@@ -129,23 +129,6 @@ func (vv InputValues) JustValues() map[string]cty.Value {
 	return ret
 }
 
-// DefaultVariableValues returns an InputValues map representing the default
-// values specified for variables in the given configuration map.
-func DefaultVariableValues(configs map[string]*configs.Variable) InputValues {
-	ret := make(InputValues)
-	for k, c := range configs {
-		if c.Default == cty.NilVal {
-			continue
-		}
-		ret[k] = &InputValue{
-			Value:       c.Default,
-			SourceType:  ValueFromConfig,
-			SourceRange: tfdiags.SourceRangeFromHCL(c.DeclRange),
-		}
-	}
-	return ret
-}
-
 // SameValues returns true if the given InputValues has the same values as
 // the receiever, disregarding the source types and source ranges.
 //
@@ -225,19 +208,6 @@ func (vv InputValues) Identical(other InputValues) bool {
 	}
 
 	return true
-}
-
-func mergeDefaultInputVariableValues(setVals InputValues, rootVarsConfig map[string]*configs.Variable) InputValues {
-	var variables InputValues
-
-	// Default variables from the configuration seed our map.
-	variables = DefaultVariableValues(rootVarsConfig)
-
-	// Variables provided by the caller (from CLI, environment, etc) can
-	// override the defaults.
-	variables = variables.Override(setVals)
-
-	return variables
 }
 
 // checkInputVariables ensures that variable values supplied at the UI conform
